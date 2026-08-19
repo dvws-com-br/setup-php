@@ -1,0 +1,72 @@
+name: Test setup php
+
+on:
+  push:
+    paths:
+      - 'scripts/**'
+      - 'action.yml'
+      - '.github/workflows/tests.yml'
+  workflow_call:
+
+
+jobs:
+  tests:
+    runs-on:
+      - self-hosted
+      - php
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.1', '8.2', '8.3', '8.4', '8.5']
+        coverage: ['', 'pcov', 'xdebug']
+        ini-values: ['', 'memory_limit=256M']
+    steps:      
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Tests
+        uses: ./.github/actions/setup-php
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: ${{ matrix.coverage }}
+          ini-values: ${{ matrix.ini-values }}
+    
+      - name: Validate setup
+        run: |
+          expected="${{ matrix.php-version }}"
+          actual="$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')"
+
+          if [[ "${actual}" != "${expected}" ]]; then
+              echo "::error::Expected PHP ${expected}, got ${actual}"
+              exit 1
+          fi
+
+          case "${{ matrix.coverage }}" in
+              pcov)
+                  php -m | grep -q pcov || {
+                      echo "::error::pcov extension is not loaded"
+                      exit 1
+                  }
+                  ;;
+
+              xdebug)
+                  php -m | grep -q xdebug || {
+                      echo "::error::xdebug extension is not loaded"
+                      exit 1
+                  }
+                  ;;
+          esac
+
+          if [[ -n "${{ matrix.ini-values }}" ]]; then
+              expected_ini="${{ matrix.ini-values }}"
+              key="${expected_ini%%=*}"
+              expected_value="${expected_ini#*=}"
+              actual_value="$(php -r "echo ini_get('${key}');")"
+
+              if [[ "${actual_value}" != "${expected_value}" ]]; then
+                  echo "::error::Expected ${key}=${expected_value}, got ${key}=${actual_value}"
+                  exit 1
+              fi
+          fi
+
+          php -v
