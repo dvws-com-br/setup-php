@@ -22,6 +22,8 @@ jobs:
         coverage: ['', 'pcov', 'xdebug']
         ini-values: ['', 'memory_limit=256M']
     steps:      
+      - name: Checkout
+        uses: actions/checkout@v7
 
       - name: Tests
         uses: ./
