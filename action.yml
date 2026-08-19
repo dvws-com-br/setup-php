@@ -1,0 +1,57 @@
+name: Setup PHP
+description: Configure PHP for the dvws-com-br runner
+
+inputs:
+  php-version:
+    description: PHP version
+    required: false
+    default: "8.5"
+
+  tools:
+    description: Provider tools
+    required: false
+
+  coverage:
+    description: Coverage driver (pcov or xdebug)
+    required: false
+
+  ini-values:
+    description: Additional PHP INI values
+    required: false
+
+runs:
+  using: composite
+
+  steps:
+    - name: Set PHP version
+      shell: bash
+      env:
+        PHP_VERSION: ${{ inputs.php-version }}
+      run: ${{ github.action_path }}/scripts/set-php-version.sh
+
+    - name: Configure coverage
+      if: inputs.coverage != ''
+      shell: bash
+      env:
+        COVERAGE: ${{ inputs.coverage }}
+      run: ${{ github.action_path }}/scripts/configure-coverage.sh
+
+    - name: Configure PHP INI
+      if: inputs.ini-values != ''
+      shell: bash
+      env:
+        INI_VALUES: ${{ inputs.ini-values }}
+      run: ${{ github.action_path }}/scripts/configure-ini.sh
+
+    - name: Configure tools
+      if: inputs.tools != ''
+      shell: bash
+      env:
+        TOOLS: ${{ inputs.tools }}
+      run: ${{ github.action_path }}/scripts/configure-tools.sh
+
+    - name: Verify PHP
+      shell: bash
+      env:
+        COVERAGE: ${{ inputs.coverage }}
+      run: ${{ github.action_path }}/scripts/verify-php.sh
