@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Tests
-        uses: ./.github/actions/setup-php
+        uses: ./
         with:
           php-version: ${{ matrix.php-version }}
           coverage: ${{ matrix.coverage }}
