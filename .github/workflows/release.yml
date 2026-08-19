@@ -25,4 +25,5 @@ jobs:
 
       - uses: googleapis/release-please-action@v5
         with:
+          type: simple
           token: ${{ secrets.GH_TOKEN }}
